@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generated Schedule</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Generated Schedule</h1>
+    {% for day, assignments in schedule.items() %}
+    <h2>{{ day }}</h2>
+    <ul>
+        {% for time_slot, nurse in assignments %}
+        <li>{{ time_slot[0] }} - {{ time_slot[1] }}: {{ nurse }}</li>
+        {% endfor %}
+    </ul>
+    {% endfor %}
+
+    <h2>Unassigned Hours</h2>
+    {% for day, times in unassigned_hours.items() %}
+    {% if times %}
+    <h3>{{ day }}</h3>
+    <ul>
+        {% for time_slot in times %}
+        <li>{{ time_slot[0] }} - {{ time_slot[1] }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endfor %}
+    <a href="/">Back</a>
+</body>
+</html>

@@ -1,45 +1,41 @@
 from collections import defaultdict
-from datetime import datetime
-
+import datetime
 
 class NurseScheduler:
     def __init__(self, required_hours):
         self.required_hours = required_hours
         self.availabilities = defaultdict(list)
-        self.nurse_hours = defaultdict(int)
+        self.schedule = defaultdict(list)
+        self.unassigned_hours = defaultdict(list)
+        self.total_hours = 0
 
     def add_availability(self, nurse_name, day, start_time, end_time):
-        self.availabilities[nurse_name].append((day, start_time, end_time))
+        self.availabilities[day].append((nurse_name, start_time, end_time))
 
     def generate_schedule(self):
-        schedule = {day: [] for day in self.required_hours.keys()}
-        unassigned_hours = {day: list(times) for day, times in self.required_hours.items()}
-        total_hours = sum(self.calculate_hours(slot) for slots in self.required_hours.values() for slot in slots)
+        for day, periods in self.required_hours.items():
+            for start, end in periods:
+                start_dt = datetime.datetime.strptime(start, '%H:%M')
+                end_dt = datetime.datetime.strptime(end, '%H:%M')
+                hours_needed = (end_dt - start_dt).seconds / 3600
 
-        while total_hours > 0:
-            assigned_any = False
-            for nurse, times in self.availabilities.items():
-                for day, start_time, end_time in times:
-                    if day in unassigned_hours:
-                        for time_slot in list(unassigned_hours[day]):
-                            if start_time <= time_slot[0] and end_time >= time_slot[1]:
-                                schedule[day].append((time_slot, nurse))
-                                unassigned_hours[day].remove(time_slot)
-                                hours = self.calculate_hours(time_slot)
-                                self.nurse_hours[nurse] += hours
-                                total_hours -= hours
-                                assigned_any = True
-                                if not unassigned_hours[day]:
-                                    break
-                        if not unassigned_hours[day]:
-                            break
-            if not assigned_any:
-                break
+                available_nurses = sorted(self.availabilities[day], key=lambda x: x[2])
 
-        return schedule, unassigned_hours
+                hours_assigned = 0
+                for nurse_name, nurse_start, nurse_end in available_nurses:
+                    nurse_start_dt = datetime.datetime.strptime(nurse_start, '%H:%M')
+                    nurse_end_dt = datetime.datetime.strptime(nurse_end, '%H:%M')
 
-    def calculate_hours(self, time_slot):
-        time_format = "%H:%M"
-        start = datetime.strptime(time_slot[0], time_format)
-        end = datetime.strptime(time_slot[1], time_format)
-        return (end - start).seconds / 3600
+                    if nurse_start_dt <= start_dt and nurse_end_dt >= end_dt:
+                        self.schedule[day].append({
+                            'nurse_name': nurse_name,
+                            'period': (start, end)
+                        })
+                        self.availabilities[day].remove((nurse_name, nurse_start, nurse_end))
+                        hours_assigned += hours_needed
+                        break
+
+                if hours_assigned < hours_needed:
+                    self.unassigned_hours[day].append((start, end))
+
+        return self.schedule, self.unassigned_hours

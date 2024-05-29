@@ -2,31 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Generated Schedule</title>
+    <title>Calendario Semanal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Generated Schedule</h1>
-    {% for day, assignments in schedule.items() %}
-    <h2>{{ day }}</h2>
-    <ul>
-        {% for time_slot, nurse in assignments %}
-        <li>{{ time_slot[0] }} - {{ time_slot[1] }}: {{ nurse }}</li>
-        {% endfor %}
-    </ul>
-    {% endfor %}
-
-    <h2>Unassigned Hours</h2>
-    {% for day, times in unassigned_hours.items() %}
-    {% if times %}
-    <h3>{{ day }}</h3>
-    <ul>
-        {% for time_slot in times %}
-        <li>{{ time_slot[0] }} - {{ time_slot[1] }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    {% endfor %}
-    <a href="/">Back</a>
+    <div class="container">
+        <h1>Calendario Semanal</h1>
+        {% if unassigned_message %}
+            <div class="unassigned-message">{{ unassigned_message }}</div>
+        {% endif %}
+        <table class="calendar">
+            <thead>
+                <tr>
+                    <th>Hora</th>
+                    <th>Lunes</th>
+                    <th>Martes</th>
+                    <th>Miércoles</th>
+                    <th>Jueves</th>
+                    <th>Viernes</th>
+                    <th>Sábado</th>
+                    <th>Domingo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for hour in range(9, 21) %}
+                    <tr>
+                        <td>{{ "%02d:00" % hour }}</td>
+                        {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                            <td>
+                                {% for period in schedule[day] %}
+                                    {% if period['period'][0][:2] == "%02d" % hour %}
+                                        {{ period['nurse_name'] }}: {{ period['period'][0] }} - {{ period['period'][1] }}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button class="cancel" onclick="window.location.href='/'">Volver</button>
+    </div>
 </body>
 </html>

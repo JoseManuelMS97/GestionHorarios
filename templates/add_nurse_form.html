@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Añadir Enfermera</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Añadir Enfermera</h1>
+        <form action="/add_nurse" method="post">
+            <label for="name">Nombre:</label>
+            <input type="text" id="name" name="name" required>
+            <button type="submit">Guardar</button>
+        </form>
+        <button class="cancel" onclick="window.location.href='/'">Volver</button>
+    </div>
+</body>
+</html>

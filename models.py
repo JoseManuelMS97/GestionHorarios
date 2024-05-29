@@ -3,7 +3,7 @@ from extensions import db
 class Nurse(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
-    availabilities = db.relationship('Availability', backref='nurse', lazy=True)
+    availabilities = db.relationship('Availability', backref='nurse', cascade='all, delete-orphan', lazy=True)
 
 class Availability(db.Model):
     id = db.Column(db.Integer, primary_key=True)

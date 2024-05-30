@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for
 from extensions import db
 from scheduler import NurseScheduler
 from models import Nurse, Availability
+from collections import defaultdict
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///nurses.db'
@@ -78,6 +79,50 @@ def generate_schedule():
 
     schedule, unassigned_hours = scheduler.generate_schedule()
 
+    # Preprocess schedule for Jinja2
+    processed_schedule = {day: [] for day in
+                          ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
+    nurse_hours = defaultdict(int)
+
+    for day, periods in schedule.items():
+        if periods:
+            current_nurses = None
+            current_start = None
+            current_end = None
+
+            for (start, end), nurses in sorted(periods.items()):
+                start_hour = int(start[:2])
+                end_hour = int(end[:2])
+                duration = end_hour - start_hour
+
+                if current_nurses is None:
+                    current_nurses = nurses
+                    current_start = start_hour
+                    current_end = end_hour
+                elif current_nurses == nurses:
+                    current_end = end_hour
+                else:
+                    processed_schedule[day].append({
+                        'start': current_start,
+                        'end': current_end,
+                        'nurses': current_nurses
+                    })
+                    for nurse in current_nurses:
+                        nurse_hours[nurse] += (current_end - current_start)
+
+                    current_nurses = nurses
+                    current_start = start_hour
+                    current_end = end_hour
+
+            if current_nurses is not None:
+                processed_schedule[day].append({
+                    'start': current_start,
+                    'end': current_end,
+                    'nurses': current_nurses
+                })
+                for nurse in current_nurses:
+                    nurse_hours[nurse] += (current_end - current_start)
+
     # Create a detailed message for unassigned hours
     unassigned_message = None
     unassigned_details = []
@@ -88,8 +133,8 @@ def generate_schedule():
     if unassigned_details:
         unassigned_message = "Las siguientes horas no pudieron ser cubiertas:\n" + "\n".join(unassigned_details)
 
-    return render_template('schedule.html', schedule=schedule, unassigned_message=unassigned_message)
-
+    return render_template('schedule.html', schedule=processed_schedule, nurse_hours=nurse_hours,
+                           unassigned_message=unassigned_message)
 
 
 if __name__ == '__main__':

@@ -5,9 +5,8 @@ class NurseScheduler:
     def __init__(self, required_hours):
         self.required_hours = required_hours
         self.availabilities = defaultdict(list)
-        self.schedule = defaultdict(list)
+        self.schedule = defaultdict(lambda: defaultdict(list))
         self.unassigned_hours = defaultdict(list)
-        self.total_hours = 0
 
     def add_availability(self, nurse_name, day, start_time, end_time):
         self.availabilities[day].append((nurse_name, start_time, end_time))
@@ -27,13 +26,8 @@ class NurseScheduler:
                     nurse_end_dt = datetime.datetime.strptime(nurse_end, '%H:%M')
 
                     if nurse_start_dt <= start_dt and nurse_end_dt >= end_dt:
-                        self.schedule[day].append({
-                            'nurse_name': nurse_name,
-                            'period': (start, end)
-                        })
-                        self.availabilities[day].remove((nurse_name, nurse_start, nurse_end))
+                        self.schedule[day][(start, end)].append(nurse_name)
                         hours_assigned += hours_needed
-                        break
 
                 if hours_assigned < hours_needed:
                     self.unassigned_hours[day].append((start, end))

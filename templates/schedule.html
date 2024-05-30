@@ -31,12 +31,29 @@
                         {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
                             <td>
                                 {% for period in schedule[day] %}
-                                    {% if period['period'][0][:2] == "%02d" % hour %}
-                                        {{ period['nurse_name'] }}: {{ period['period'][0] }} - {{ period['period'][1] }}
+                                    {% if period.start == hour %}
+                                        <div>{{ period.start }}:00 - {{ period.end }}:00: {{ period.nurses | join(', ') }}</div>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                         {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <h2>Horas Totales por Enfermera</h2>
+        <table class="nurse-hours">
+            <thead>
+                <tr>
+                    <th>Enfermera</th>
+                    <th>Horas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nurse, hours in nurse_hours.items() %}
+                    <tr>
+                        <td>{{ nurse }}</td>
+                        <td>{{ hours }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

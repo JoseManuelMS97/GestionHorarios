@@ -11,6 +11,13 @@
         <form action="/add_nurse" method="post">
             <label for="name">Nombre:</label>
             <input type="text" id="name" name="name" required>
+            <label for="role">Rol:</label>
+            <select id="role" name="role" required>
+                <option value="Médico">Médico</option>
+                <option value="Enfermero">Enfermero</option>
+                <option value="Optometrista">Optometrista</option>
+                <option value="Administrador">Administrador</option>
+            </select>
             <button type="submit">Guardar</button>
         </form>
         <button class="cancel" onclick="window.location.href='/'">Volver</button>

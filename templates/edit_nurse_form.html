@@ -41,7 +41,13 @@
         <form action="/edit_nurse/{{ nurse.id }}" method="post">
             <label for="name">Nombre:</label>
             <input type="text" id="name" name="name" value="{{ nurse.name }}" required>
-
+            <label for="role">Rol:</label>
+            <select id="role" name="role" required>
+                <option value="Médico" {% if nurse.role == 'Médico' %}selected{% endif %}>Médico</option>
+                <option value="Enfermero" {% if nurse.role == 'Enfermero' %}selected{% endif %}>Enfermero</option>
+                <option value="Optometrista" {% if nurse.role == 'Optometrista' %}selected{% endif %}>Optometrista</option>
+                <option value="Administrador" {% if nurse.role == 'Administrador' %}selected{% endif %}>Administrador</option>
+            </select>
             {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
                 <div class="day-group">
                     <h3>{{ day }}</h3>
@@ -51,11 +57,9 @@
                     <input type="time" id="{{ day.lower() }}_end" name="{{ day.lower() }}_end" value="{% for availability in nurse.availabilities if availability.day == day %}{{ availability.end_time }}{% endfor %}">
                 </div>
             {% endfor %}
-
             <button type="submit">Guardar</button>
         </form>
         <button class="cancel" onclick="window.location.href='/'">Volver</button>
     </div>
 </body>
 </html>
-

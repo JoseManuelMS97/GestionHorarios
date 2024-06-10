@@ -23,7 +23,8 @@ def add_nurse_form():
 @app.route('/add_nurse', methods=['POST'])
 def add_nurse():
     name = request.form['name']
-    nurse = Nurse(name=name)
+    role = request.form['role']  # Recibir el rol del formulario
+    nurse = Nurse(name=name, role=role)
     db.session.add(nurse)
     db.session.commit()
     return redirect(url_for('index'))
@@ -37,6 +38,7 @@ def edit_nurse_form(nurse_id):
 def edit_nurse(nurse_id):
     nurse = Nurse.query.get(nurse_id)
     nurse.name = request.form['name']
+    nurse.role = request.form['role']  # Actualizar el rol
     db.session.commit()
 
     # Remove existing availabilities
@@ -75,13 +77,11 @@ def generate_schedule():
     scheduler = NurseScheduler(required_hours)
     for nurse in nurses:
         for availability in nurse.availabilities:
-            scheduler.add_availability(nurse.name, availability.day, availability.start_time, availability.end_time)
+            scheduler.add_availability(nurse.name, nurse.role, availability.day, availability.start_time, availability.end_time)
 
     schedule, unassigned_hours = scheduler.generate_schedule()
 
-    # Preprocess schedule for Jinja2
-    processed_schedule = {day: [] for day in
-                          ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
+    processed_schedule = {day: [] for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
     nurse_hours = defaultdict(int)
 
     for day, periods in schedule.items():
@@ -96,7 +96,7 @@ def generate_schedule():
                 duration = end_hour - start_hour
 
                 if current_nurses is None:
-                    current_nurses = nurses
+                    current_nurses = sorted(nurses, key=lambda x: x[1] != 'Médico')  # Ordenar para que los médicos estén primero
                     current_start = start_hour
                     current_end = end_hour
                 elif current_nurses == nurses:
@@ -105,12 +105,12 @@ def generate_schedule():
                     processed_schedule[day].append({
                         'start': current_start,
                         'end': current_end,
-                        'nurses': current_nurses
+                        'nurses': sorted(current_nurses, key=lambda x: x[1] != 'Médico')  # Ordenar para que los médicos estén primero
                     })
-                    for nurse in current_nurses:
+                    for nurse, role in current_nurses:
                         nurse_hours[nurse] += (current_end - current_start)
 
-                    current_nurses = nurses
+                    current_nurses = sorted(nurses, key=lambda x: x[1] != 'Médico')  # Ordenar para que los médicos estén primero
                     current_start = start_hour
                     current_end = end_hour
 
@@ -118,12 +118,11 @@ def generate_schedule():
                 processed_schedule[day].append({
                     'start': current_start,
                     'end': current_end,
-                    'nurses': current_nurses
+                    'nurses': sorted(current_nurses, key=lambda x: x[1] != 'Médico')  # Ordenar para que los médicos estén primero
                 })
-                for nurse in current_nurses:
+                for nurse, role in current_nurses:
                     nurse_hours[nurse] += (current_end - current_start)
 
-    # Create a detailed message for unassigned hours
     unassigned_message = None
     unassigned_details = []
     for day, periods in unassigned_hours.items():
@@ -133,8 +132,10 @@ def generate_schedule():
     if unassigned_details:
         unassigned_message = "Las siguientes horas no pudieron ser cubiertas:\n" + "\n".join(unassigned_details)
 
-    return render_template('schedule.html', schedule=processed_schedule, nurse_hours=nurse_hours,
-                           unassigned_message=unassigned_message)
+    return render_template('schedule.html', schedule=processed_schedule, nurse_hours=nurse_hours, unassigned_message=unassigned_message)
+
+
+
 
 
 if __name__ == '__main__':

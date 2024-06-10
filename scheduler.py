@@ -8,8 +8,8 @@ class NurseScheduler:
         self.schedule = defaultdict(lambda: defaultdict(list))
         self.unassigned_hours = defaultdict(list)
 
-    def add_availability(self, nurse_name, day, start_time, end_time):
-        self.availabilities[day].append((nurse_name, start_time, end_time))
+    def add_availability(self, nurse_name, nurse_role, day, start_time, end_time):
+        self.availabilities[day].append((nurse_name, nurse_role, start_time, end_time))
 
     def generate_schedule(self):
         for day, periods in self.required_hours.items():
@@ -18,15 +18,15 @@ class NurseScheduler:
                 end_dt = datetime.datetime.strptime(end, '%H:%M')
                 hours_needed = (end_dt - start_dt).seconds / 3600
 
-                available_nurses = sorted(self.availabilities[day], key=lambda x: x[2])
+                available_nurses = sorted(self.availabilities[day], key=lambda x: (x[1] != 'Médico', x[3]))
 
                 hours_assigned = 0
-                for nurse_name, nurse_start, nurse_end in available_nurses:
+                for nurse_name, nurse_role, nurse_start, nurse_end in available_nurses:
                     nurse_start_dt = datetime.datetime.strptime(nurse_start, '%H:%M')
                     nurse_end_dt = datetime.datetime.strptime(nurse_end, '%H:%M')
 
                     if nurse_start_dt <= start_dt and nurse_end_dt >= end_dt:
-                        self.schedule[day][(start, end)].append(nurse_name)
+                        self.schedule[day][(start, end)].append((nurse_name, nurse_role))
                         hours_assigned += hours_needed
 
                 if hours_assigned < hours_needed:

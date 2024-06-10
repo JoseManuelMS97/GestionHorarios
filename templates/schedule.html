@@ -25,16 +25,33 @@
                 </tr>
             </thead>
             <tbody>
+                <!-- Fila para los médicos -->
+                <tr>
+                    <td>Médicos</td>
+                    {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                        <td>
+                            {% for period in medical_schedule[day] %}
+                                <div>{{ period['start'] }}:00 - {{ period['end'] }}:00</div>
+                                <ul>
+                                    {% for nurse, role in period['nurses'] %}
+                                        <li>{{ nurse }} ({{ role }})</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endfor %}
+                        </td>
+                    {% endfor %}
+                </tr>
+                <!-- Horario general -->
                 {% for hour in range(9, 21) %}
                     <tr>
                         <td>{{ "%02d:00" % hour }}</td>
                         {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
                             <td>
-                                {% for period in schedule[day] %}
-                                    {% if period.start == hour %}
-                                        <div>{{ period.start }}:00 - {{ period.end }}:00</div>
+                                {% for period in processed_schedule[day] %}
+                                    {% if period['start'] == hour %}
+                                        <div>{{ period['start'] }}:00 - {{ period['end'] }}:00</div>
                                         <ul>
-                                            {% for nurse, role in period.nurses %}
+                                            {% for nurse, role in period['nurses'] %}
                                                 <li>{{ nurse }} ({{ role }})</li>
                                             {% endfor %}
                                         </ul>
@@ -63,8 +80,8 @@
                 {% endfor %}
             </tbody>
         </table>
+        <button onclick="window.location.href='/download_schedule_pdf'">Descargar en PDF</button>
         <button class="cancel" onclick="window.location.href='/'">Volver</button>
     </div>
 </body>
 </html>
-
